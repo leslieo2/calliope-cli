@@ -1,0 +1,100 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Self
+
+from pydantic import BaseModel, Field, SecretStr, ValidationError, field_serializer, model_validator
+
+from calliope_cli.exception import ConfigError
+from calliope_cli.llm import ModelCapability, ProviderType
+from calliope_cli.share import get_share_dir
+from calliope_cli.utils.logging import logger
+
+
+class LLMProvider(BaseModel):
+    """LLM provider configuration."""
+
+    type: ProviderType
+    base_url: str
+    api_key: SecretStr
+    custom_headers: dict[str, str] | None = None
+
+    @field_serializer("api_key", when_used="json")
+    def dump_secret(self, value: SecretStr):
+        return value.get_secret_value()
+
+
+class LLMModel(BaseModel):
+    """LLM model configuration."""
+
+    provider: str
+    model: str
+    max_context_size: int
+    capabilities: set[ModelCapability] | None = None
+
+
+class LoopControl(BaseModel):
+    max_steps_per_run: int = 100
+    max_retries_per_step: int = 3
+
+
+class Config(BaseModel):
+    """Main configuration for Calliope."""
+
+    default_model: str = Field(default="", description="Default model to use")
+    models: dict[str, LLMModel] = Field(default_factory=dict, description="List of LLM models")
+    providers: dict[str, LLMProvider] = Field(
+        default_factory=dict, description="List of LLM providers"
+    )
+    loop_control: LoopControl = Field(default_factory=LoopControl, description="Agent loop control")
+
+    @model_validator(mode="after")
+    def validate_model(self) -> Self:
+        if self.default_model and self.default_model not in self.models:
+            raise ValueError(f"Default model {self.default_model} not found in models")
+        for model in self.models.values():
+            if model.provider not in self.providers:
+                raise ValueError(f"Provider {model.provider} not found in providers")
+        return self
+
+
+def get_config_file() -> Path:
+    return get_share_dir() / "config.json"
+
+
+def get_default_config() -> Config:
+    return Config(
+        default_model="",
+        models={},
+        providers={},
+    )
+
+
+def load_config(config_file: Path | None = None) -> Config:
+    config_file = config_file or get_config_file()
+    logger.debug("Loading config from file: {file}", file=config_file)
+
+    if not config_file.exists():
+        config = get_default_config()
+        logger.debug("No config, writing default config: {config}", config=config)
+        with open(config_file, "w", encoding="utf-8") as f:
+            f.write(config.model_dump_json(indent=2, exclude_none=True))
+        return config
+
+    try:
+        with open(config_file, encoding="utf-8") as f:
+            data = json.load(f)
+        return Config(**data)
+    except json.JSONDecodeError as e:
+        raise ConfigError(f"Invalid JSON in configuration file: {e}") from e
+    except ValidationError as e:
+        raise ConfigError(f"Invalid configuration file: {e}") from e
+
+
+def save_config(config: Config, config_file: Path | None = None) -> None:
+    config_file = config_file or get_config_file()
+    logger.debug("Saving config to file: {file}", file=config_file)
+    with open(config_file, "w", encoding="utf-8") as f:
+        f.write(config.model_dump_json(indent=2, exclude_none=True))
+

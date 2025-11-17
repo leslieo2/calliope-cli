@@ -1,0 +1,73 @@
+from __future__ import annotations
+
+import uuid
+from dataclasses import dataclass
+from pathlib import Path
+
+from calliope_cli.metadata import WorkDirMeta, load_metadata, save_metadata
+from calliope_cli.utils.logging import logger
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Session:
+    """A Calliope session bound to a work directory."""
+
+    id: str
+    work_dir: Path
+    history_file: Path
+
+    @staticmethod
+    def create(work_dir: Path, _history_file: Path | None = None) -> Session:
+        logger.debug("Creating new session for work directory: {work_dir}", work_dir=work_dir)
+
+        metadata = load_metadata()
+        work_dir_meta = next((wd for wd in metadata.work_dirs if wd.path == str(work_dir)), None)
+        if work_dir_meta is None:
+            work_dir_meta = WorkDirMeta(path=str(work_dir))
+            metadata.work_dirs.append(work_dir_meta)
+
+        session_id = str(uuid.uuid4())
+        if _history_file is None:
+            history_file = work_dir_meta.sessions_dir / f"{session_id}.jsonl"
+        else:
+            logger.warning("Using provided history file: {history_file}", history_file=_history_file)
+            _history_file.parent.mkdir(parents=True, exist_ok=True)
+            if _history_file.exists():
+                assert _history_file.is_file()
+            history_file = _history_file
+
+        if history_file.exists():
+            logger.warning("History exists, truncating: {history_file}", history_file=history_file)
+            history_file.unlink()
+            history_file.touch()
+
+        save_metadata(metadata)
+
+        return Session(
+            id=session_id,
+            work_dir=work_dir,
+            history_file=history_file,
+        )
+
+    @staticmethod
+    def continue_(work_dir: Path) -> Session | None:
+        logger.debug("Continuing session for work directory: {work_dir}", work_dir=work_dir)
+
+        metadata = load_metadata()
+        work_dir_meta = next((wd for wd in metadata.work_dirs if wd.path == str(work_dir)), None)
+        if work_dir_meta is None:
+            logger.debug("Work directory never been used")
+            return None
+        if work_dir_meta.last_session_id is None:
+            logger.debug("Work directory never had a session")
+            return None
+
+        session_id = work_dir_meta.last_session_id
+        history_file = work_dir_meta.sessions_dir / f"{session_id}.jsonl"
+
+        return Session(
+            id=session_id,
+            work_dir=work_dir,
+            history_file=history_file,
+        )
+

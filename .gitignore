@@ -1,0 +1,27 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.pytest_cache/
+.uv-cache
+
+# Virtual environments
+.venv/
+.uv/
+
+# Tooling
+.pyright/
+.mypy_cache/
+
+# Distribution / build
+build/
+dist/
+*.egg-info/
+*.spec
+
+# Local configuration
+.env
+.env.*
+.DS_Store
+.idea/
+.vscode/
