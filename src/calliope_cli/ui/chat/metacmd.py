@@ -21,6 +21,12 @@ class MetaCommand:
     def all_names(self) -> list[str]:
         return [self.name, *self.aliases]
 
+    def slash_name(self) -> str:
+        """Display name in "/name (alias1, alias2)" format for completions."""
+        if self.aliases:
+            return f"/{self.name} ({', '.join(self.aliases)})"
+        return f"/{self.name}"
+
 
 _meta_commands: dict[str, MetaCommand] = {}
 _meta_command_aliases: dict[str, MetaCommand] = {}
@@ -39,17 +45,29 @@ def meta_command(func: MetaCmdFunc, /) -> MetaCmdFunc: ...
 
 
 @overload
-def meta_command(*, name: str | None = None, aliases: Sequence[str] | None = None) -> Callable[[MetaCmdFunc], MetaCmdFunc]: ...
+def meta_command(
+    *, name: str | None = None, aliases: Sequence[str] | None = None
+) -> Callable[[MetaCmdFunc], MetaCmdFunc]: ...
 
 
-def meta_command(func: MetaCmdFunc | None = None, *, name: str | None = None, aliases: Sequence[str] | None = None):
+def meta_command(
+    func: MetaCmdFunc | None = None,
+    *,
+    name: str | None = None,
+    aliases: Sequence[str] | None = None,
+):
     """Decorator to register a meta command with optional name/aliases."""
 
     def _register(f: MetaCmdFunc):
         primary = name or f.__name__
         alias_list = list(aliases) if aliases else []
 
-        cmd = MetaCommand(name=primary, description=(f.__doc__ or "").strip(), func=f, aliases=alias_list)
+        cmd = MetaCommand(
+            name=primary,
+            description=(f.__doc__ or "").strip(),
+            func=f,
+            aliases=alias_list,
+        )
         _meta_commands[primary] = cmd
         _meta_command_aliases[primary] = cmd
         for alias in alias_list:
