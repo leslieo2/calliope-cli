@@ -9,7 +9,7 @@ from typing import Any
 from kosong.message import Message
 from kosong.tooling import ToolError, ToolOk
 from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import Completion, Completer
+from prompt_toolkit.completion import merge_completers
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.table import Table
@@ -17,39 +17,10 @@ from rich.table import Table
 from calliope_cli.core.calliopecore import CalliopeCore
 from calliope_cli.core.context import Context
 from calliope_cli.utils.message import message_stringify
+from calliope_cli.ui.chat.completers import FileMentionCompleter, MetaCommandCompleter
 from calliope_cli.ui.chat.metacmd import get_meta_command, get_meta_commands, meta_command
 
 console = Console()
-
-
-class MetaCommandCompleter(Completer):
-    """Autocomplete slash commands using the meta-command registry."""
-
-    def get_completions(self, document, complete_event):  # type: ignore[override]
-        text = document.text_before_cursor
-
-        if document.text_after_cursor.strip():
-            return
-
-        last_space = text.rfind(" ")
-        token = text[last_space + 1 :]
-        prefix = text[: last_space + 1] if last_space != -1 else ""
-
-        if prefix.strip() or not token.startswith("/"):
-            return
-
-        typed = token[1:]
-        typed_lower = typed.lower()
-
-        for cmd in sorted(get_meta_commands(), key=lambda c: c.name):
-            names = [cmd.name, *cmd.aliases]
-            if typed == "" or any(name.lower().startswith(typed_lower) for name in names):
-                yield Completion(
-                    text=f"/{cmd.name}",
-                    start_position=-len(token),
-                    display=cmd.slash_name(),
-                    display_meta=cmd.description,
-                )
 
 
 class ChatApp:
@@ -59,7 +30,10 @@ class ChatApp:
         self._soul = soul
         self._welcome_info = welcome_info or []
         self._session = PromptSession(
-            completer=MetaCommandCompleter(),
+            completer=merge_completers(
+                [MetaCommandCompleter(), FileMentionCompleter(Path.cwd())],
+                deduplicate=True,
+            ),
             complete_while_typing=True,
         )
 
