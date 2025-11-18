@@ -77,10 +77,12 @@ class CalliopeCore:
         )
 
         tool_results = await result.tool_results()
-        await self._handle_tool_results(tool_results)
         await self._context.append_message(result.message)
         if result.usage:
             await self._context.update_token_count(result.usage.input)
+
+        # Maintain natural ordering: model message first, then tool results
+        await self._handle_tool_results(tool_results)
 
         return CalliopeRunResult(step_result=result, tool_results=tool_results)
 
