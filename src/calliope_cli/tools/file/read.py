@@ -20,7 +20,7 @@ class ReadFile(CallableTool2[Params]):
     name: str = "ReadFile"
     description: str = (
         "Read a text file with safe limits. Provide an absolute path. "
-        f"Max {MAX_LINES} lines and {MAX_BYTES//1024}KB per call."
+        f"Max {MAX_LINES} lines and {MAX_BYTES // 1024}KB per call."
     )
     params: type[Params] = Params
 
@@ -61,12 +61,13 @@ class ReadFile(CallableTool2[Params]):
             lines_with_no = [
                 f"{line_num:6d}\t{line}"
                 for line_num, line in zip(
-                    range(params.line_offset, params.line_offset + len(lines)), lines, strict=True
+                    range(params.line_offset, params.line_offset + len(lines)),
+                    lines,
+                    strict=True,
                 )
             ]
             summary = (
-                f"{len(lines)} lines read from {params.path} "
-                f"starting at line {params.line_offset}."
+                f"{len(lines)} lines read from {params.path} starting at line {params.line_offset}."
             )
             return ToolOk(output="".join(lines_with_no), message=summary)
         except Exception as exc:  # pragma: no cover - defensive
@@ -74,4 +75,3 @@ class ReadFile(CallableTool2[Params]):
                 message=f"Failed to read {params.path}. Error: {exc}",
                 brief="Failed to read file",
             )
-

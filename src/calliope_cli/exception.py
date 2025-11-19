@@ -11,4 +11,3 @@ class ConfigError(CalliopeError):
 
 class AgentSpecError(CalliopeError):
     """Raised when agent specification is invalid."""
-

@@ -5,7 +5,12 @@ import re
 import time
 from pathlib import Path
 
-from prompt_toolkit.completion import Completion, Completer, FuzzyCompleter, WordCompleter
+from prompt_toolkit.completion import (
+    Completer,
+    Completion,
+    FuzzyCompleter,
+    WordCompleter,
+)
 from prompt_toolkit.document import Document
 
 from calliope_cli.ui.chat.metacmd import get_meta_commands
@@ -148,7 +153,9 @@ class FileMentionCompleter(Completer):
 
                 dirs[:] = sorted(d for d in dirs if not self._is_ignored(d))
 
-                if relative_root.parts and any(self._is_ignored(part) for part in relative_root.parts):
+                if relative_root.parts and any(
+                    self._is_ignored(part) for part in relative_root.parts
+                ):
                     dirs[:] = []
                     continue
 

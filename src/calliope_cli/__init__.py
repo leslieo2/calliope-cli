@@ -1,2 +1,1 @@
 """Calliope CLI package."""
-

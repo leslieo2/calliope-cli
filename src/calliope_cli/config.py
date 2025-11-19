@@ -4,7 +4,14 @@ import json
 from pathlib import Path
 from typing import Self
 
-from pydantic import BaseModel, Field, SecretStr, ValidationError, field_serializer, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    SecretStr,
+    ValidationError,
+    field_serializer,
+    model_validator,
+)
 
 from calliope_cli.exception import ConfigError
 from calliope_cli.llm import ModelCapability, ProviderType
@@ -97,4 +104,3 @@ def save_config(config: Config, config_file: Path | None = None) -> None:
     logger.debug("Saving config to file: {file}", file=config_file)
     with open(config_file, "w", encoding="utf-8") as f:
         f.write(config.model_dump_json(indent=2, exclude_none=True))
-

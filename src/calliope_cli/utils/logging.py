@@ -20,4 +20,3 @@ class StreamToLogger(IO[str]):
 
     def flush(self) -> None:
         pass
-

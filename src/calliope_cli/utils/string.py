@@ -7,4 +7,3 @@ def shorten_middle(text: str, width: int = 80) -> str:
         return text
     keep = (width - 3) // 2
     return text[:keep] + "..." + text[-keep:]
-

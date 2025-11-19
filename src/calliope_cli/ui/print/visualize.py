@@ -8,4 +8,3 @@ console = Console()
 
 def render_markdown(text: str) -> None:
     console.print(Markdown(text))
-

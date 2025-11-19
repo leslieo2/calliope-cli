@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import inspect
 from contextvars import ContextVar
-from typing import override, get_type_hints
+from typing import get_type_hints, override
 
 from kosong.message import ToolCall
 from kosong.tooling import HandleResult, ToolReturnType
@@ -22,7 +22,9 @@ class CustomToolset(SimpleToolset):
     def __iadd__(self, tool):  # type: ignore[override]
         try:
             type_hints = get_type_hints(tool.__call__)
-            return_annotation = type_hints.get("return", inspect.signature(tool.__call__).return_annotation)
+            return_annotation = type_hints.get(
+                "return", inspect.signature(tool.__call__).return_annotation
+            )
         except Exception:  # pragma: no cover - defensive
             return_annotation = inspect.signature(tool.__call__).return_annotation
 

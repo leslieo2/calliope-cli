@@ -50,4 +50,3 @@ def save_metadata(metadata: Metadata):
     logger.debug("Saving metadata to file: {file}", file=metadata_file)
     with open(metadata_file, "w", encoding="utf-8") as f:
         json.dump(metadata.model_dump(), f, indent=2, ensure_ascii=False)
-

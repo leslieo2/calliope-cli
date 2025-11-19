@@ -151,9 +151,13 @@ def calliope(
             raise typer.BadParameter("Command cannot be empty", param_hint="--command")
 
     if input_format is not None and ui != "print":
-        raise typer.BadParameter("Input format is only supported for print UI", param_hint="--input-format")
+        raise typer.BadParameter(
+            "Input format is only supported for print UI", param_hint="--input-format"
+        )
     if output_format is not None and ui != "print":
-        raise typer.BadParameter("Output format is only supported for print UI", param_hint="--output-format")
+        raise typer.BadParameter(
+            "Output format is only supported for print UI", param_hint="--output-format"
+        )
 
     async def _run() -> bool:
         if thinking is None:
@@ -210,4 +214,3 @@ if __name__ == "__main__":
         sys.modules["calliope_cli.cli"] = sys.modules[__name__]
 
     sys.exit(cli())
-

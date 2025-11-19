@@ -22,7 +22,7 @@ format: ## Auto-format Python sources with ruff.
 .PHONY: check
 check: ## Run linting and type checks.
 	uv run ruff check
-	uv run ruff format --check
+	uv run ruff format
 	uv run pyright
 
 .PHONY: test

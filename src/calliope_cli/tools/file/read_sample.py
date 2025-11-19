@@ -9,6 +9,7 @@ from kosong.tooling import CallableTool2, ToolError, ToolOk, ToolReturnType
 from pydantic import BaseModel, Field
 
 from calliope_cli.core.runtime import BuiltinSystemPromptArgs
+from calliope_cli.tools.utils import load_desc
 
 MAX_LINES = 500
 
@@ -29,9 +30,9 @@ class Params(BaseModel):
 
 class ReadSample(CallableTool2[Params]):
     name: str = "ReadSample"
-    description: str = (
-        "Read a window of a text file (head/middle/tail/random) with line numbers. "
-        f"Max {MAX_LINES} lines. Use to inspect format before writing regexes."
+    description: str = load_desc(
+        Path(__file__).parent / "read_sample.md",
+        {"MAX_LINES": str(MAX_LINES)},
     )
     params: type[Params] = Params
 
@@ -92,11 +93,11 @@ class ReadSample(CallableTool2[Params]):
 
     def _read_tail(self, path: Path, n: int) -> tuple[int, list[str]]:
         tail = deque(maxlen=n)
-        total = 0
+        _total = 0
         with open(path, encoding="utf-8", errors="replace") as f:
-            for total, line in enumerate(f, start=1):
+            for _total, line in enumerate(f, start=1):
                 tail.append(line)
-        start_line = max(1, total - len(tail) + 1)
+        start_line = max(1, _total - len(tail) + 1)
         return start_line, list(tail)
 
     def _read_middle(self, path: Path, n: int) -> tuple[int, list[str]]:
@@ -115,11 +116,11 @@ class ReadSample(CallableTool2[Params]):
         return start_line, self._read_window(path, start_line, n)
 
     def _count_lines(self, path: Path) -> int:
-        total = 0
+        _total = 0
         with open(path, encoding="utf-8", errors="replace") as f:
-            for total, _ in enumerate(f, start=1):
+            for _total, _ in enumerate(f, start=1):
                 pass
-        return total
+        return _total
 
     def _read_window(self, path: Path, start_line: int, n: int) -> list[str]:
         lines: list[str] = []

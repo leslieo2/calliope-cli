@@ -69,4 +69,3 @@ def check_message(
         elif isinstance(part, ThinkPart):
             capabilities_needed.add("thinking")
     return capabilities_needed - model_capabilities
-
