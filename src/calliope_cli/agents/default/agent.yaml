@@ -4,13 +4,13 @@ agent:
   system_prompt_path: ./system.md
   system_prompt_args: {}
   tools:
-    - calliope_cli.tools.file.read:ReadFile
+    #- calliope_cli.tools.file.read:ReadFile
     - calliope_cli.tools.file.write:WriteFile
-    - calliope_cli.tools.rag.index:RAGIndex
-    - calliope_cli.tools.rag.search:RAGSearch
-    - calliope_cli.tools.outline:Outline
-    - calliope_cli.tools.summarize:Summarize
-    - calliope_cli.tools.rewrite:Rewrite
-    - calliope_cli.tools.task:Task
-    - calliope_cli.tools.todo:Todo
+    - calliope_cli.tools.file.sample:ReadSample
+    - calliope_cli.tools.file.split:SplitToWorkspace
+    #- calliope_cli.tools.outline:Outline
+    #- calliope_cli.tools.summarize:Summarize
+    #- calliope_cli.tools.rewrite:Rewrite
+    #- calliope_cli.tools.task:Task
+    #- calliope_cli.tools.todo:Todo
   exclude_tools: []

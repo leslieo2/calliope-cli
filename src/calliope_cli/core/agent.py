@@ -3,10 +3,9 @@ from __future__ import annotations
 import importlib
 import inspect
 import string
+from typing import Any, get_type_hints
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
-
 from kosong.tooling import CallableTool, CallableTool2, Toolset
 
 from calliope_cli.agentspec import ResolvedAgentSpec, load_agent_spec
@@ -109,12 +108,16 @@ def _load_tool(tool_path: str, dependencies: dict[type[Any], Any]) -> ToolType |
     cls = getattr(module, class_name, None)
     if cls is None:
         return None
+    try:
+        type_hints = get_type_hints(cls.__init__, globalns=module.__dict__, localns=dependencies)
+    except Exception:  # pragma: no cover - defensive fallback
+        type_hints = {}
     args: list[type[Any]] = []
     for param in inspect.signature(cls).parameters.values():
         if param.kind == inspect.Parameter.KEYWORD_ONLY:
             break
-        if param.annotation not in dependencies:
+        annotation = type_hints.get(param.name, param.annotation)
+        if annotation not in dependencies:
             raise ValueError(f"Tool dependency not found: {param.annotation}")
-        args.append(dependencies[param.annotation])
+        args.append(dependencies[annotation])
     return cls(*args)
-
