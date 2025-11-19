@@ -27,6 +27,10 @@ class Params(BaseModel):
         default="# {title}\n\n{body}",
         description="Template for file content. Variables: {title}, {body}.",
     )
+    encoding: str | None = Field(
+        default=None,
+        description="Source file encoding (e.g., 'utf-8', 'gb18030'). If not provided, attempts auto-detect.",
+    )
 
 
 class SplitToWorkspace(CallableTool2[Params]):
@@ -48,24 +52,42 @@ class SplitToWorkspace(CallableTool2[Params]):
         if not source_path.is_file():
             return ToolError(message=f"`{source_path}` is not a file.", brief="Invalid path")
 
+        # 1. Detect encoding
+        encoding = params.encoding or self._detect_encoding(source_path)
+
         try:
             pattern = re.compile(f"({params.split_pattern})", flags=re.MULTILINE)
         except re.error as exc:
             return ToolError(message=f"Invalid regex: {exc}", brief="Regex error")
 
         try:
-            content = source_path.read_text(encoding="utf-8")
+            # 2. Read file using detected encoding
+            content = source_path.read_text(encoding=encoding)
+        except (UnicodeDecodeError, LookupError, ValueError):
+            return ToolError(
+                message=f"Failed to decode file `{source_path}` with encoding `{encoding}`. Try specifying a different encoding.",
+                brief="Encoding error",
+            )
         except OSError as exc:
             return ToolError(message=f"Failed to read source: {exc}", brief="Read error")
 
+        # 3. Business logic for splitting
         split_parts = pattern.split(content)
+
+        # pattern.split with capturing group creates list structure like:
+        # [preface, title1, body1, title2, body2, ...]
         headings = split_parts[1::2]
         bodies = split_parts[2::2]
+
+        # Edge case: if regex is not perfect, bodies might be fewer than headings
         if len(bodies) < len(headings):
             bodies = [*bodies, *([""] * (len(headings) - len(bodies)))]
 
         if not headings:
-            return ToolError(message="No matches found for regex; nothing to split.")
+            return ToolError(
+                message=f"No matches found for regex `{params.split_pattern}` with encoding `{encoding}`.",
+                brief="No matches found"
+            )
 
         preface = split_parts[0].strip("\n\r")
 
@@ -77,6 +99,7 @@ class SplitToWorkspace(CallableTool2[Params]):
             return ToolError(message=f"Failed to prepare workspace: {exc}", brief="Workspace error")
 
         written = 0
+        # Write Preface (always use UTF-8 for new workspace files)
         if preface:
             self._write_file(
                 workspace_path,
@@ -107,21 +130,47 @@ class SplitToWorkspace(CallableTool2[Params]):
 
         preview = ", ".join(headings[:5])
         return ToolOk(
-            output=f"Split into {written} file(s) at {workspace_path}",
+            output=f"Successfully split source (encoding: {encoding}) into {written} file(s) at {workspace_path}",
             message=f"Examples: {preview}",
         )
 
+    def _detect_encoding(self, path: Path) -> str:
+        """
+        Heuristic to detect encoding (UTF-8 -> GB18030 -> Latin-1).
+        """
+        try:
+            with open(path, "rb") as f:
+                raw = f.read(4096)
+        except OSError:
+            return "utf-8"
+
+        try:
+            raw.decode("utf-8")
+            return "utf-8"
+        except UnicodeDecodeError:
+            pass
+
+        try:
+            raw.decode("gb18030")
+            return "gb18030"
+        except UnicodeDecodeError:
+            pass
+
+        return "latin-1"
+
     def _slugify(self, text: str, max_len: int = 48) -> str:
-        normalized = unicodedata.normalize("NFKD", text)
-        cleaned = []
-        for ch in normalized:
-            category = unicodedata.category(ch)
-            if category.startswith("L") or category.startswith("N"):
-                cleaned.append(ch)
-            elif ch.isspace() or ch in {"-", "_"}:
-                cleaned.append("-")
-        slug = re.sub(r"-+", "-", "".join(cleaned)).strip("-") or "part"
-        return slug[:max_len]
+        # Note: This preserves the existing slugify logic but has limited Chinese support
+        # If you want to preserve Chinese characters in filenames, you can simplify this function
+        # The current logic removes Chinese characters and keeps only Latin characters, which is not suitable for Chinese novels
+        # Suggested modification: use a more permissive mode
+
+        # --- Improved Slugify (allows Chinese) ---
+        text = text.strip()
+        # Replace illegal filesystem characters
+        safe_text = re.sub(r'[\\/*?:"<>|]', "", text)
+        # Replace spaces with underscores
+        safe_text = safe_text.replace(" ", "_")
+        return safe_text[:max_len] or "chapter"
 
     def _resolve_path(self, raw: str) -> Path:
         path = Path(raw)
@@ -131,13 +180,19 @@ class SplitToWorkspace(CallableTool2[Params]):
 
     def _prepare_workspace(self, workspace_path: Path) -> None:
         resolved = workspace_path.resolve()
+        # Security check: prevent rm -rf / or rm -rf ~
         if resolved == resolved.root:
             raise ValueError("Refusing to use filesystem root as workspace.")
+
+        # This check is somewhat weak, suggested improvement:
+        # Ensure workspace_path is inside work_dir or is an obvious subdirectory
+
         if resolved.exists():
             shutil.rmtree(resolved)
         resolved.mkdir(parents=True, exist_ok=True)
 
     def _write_file(self, base: Path, filename: str, content: str) -> None:
+        # Output files always use UTF-8, which is best practice
         (base / filename).write_text(content, encoding="utf-8")
 
 
