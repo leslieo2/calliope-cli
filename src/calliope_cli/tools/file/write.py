@@ -47,4 +47,3 @@ class WriteFile(CallableTool2[Params]):
                 message=f"Failed to write {params.path}. Error: {exc}",
                 brief="Failed to write file",
             )
-

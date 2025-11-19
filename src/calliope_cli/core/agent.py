@@ -3,9 +3,10 @@ from __future__ import annotations
 import importlib
 import inspect
 import string
-from typing import Any, get_type_hints
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Any, get_type_hints
+
 from kosong.tooling import CallableTool, CallableTool2, Toolset
 
 from calliope_cli.agentspec import ResolvedAgentSpec, load_agent_spec

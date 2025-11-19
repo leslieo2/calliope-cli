@@ -45,4 +45,3 @@ async def next_available_rotation(path: Path) -> Path | None:
         if await _reserve_rotation_path(next_path):
             return next_path
         next_num += 1
-

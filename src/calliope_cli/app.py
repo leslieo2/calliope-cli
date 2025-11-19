@@ -131,9 +131,7 @@ class CalliopeCLI:
         if not self._runtime.llm:
             welcome_info.append(("Model", "not set, configure in config.json"))
         elif "KIMI_MODEL_NAME" in self._env_overrides:
-            welcome_info.append(
-                ("Model", f"{self._soul.model_name} (from KIMI_MODEL_NAME)")
-            )
+            welcome_info.append(("Model", f"{self._soul.model_name} (from KIMI_MODEL_NAME)"))
         else:
             welcome_info.append(("Model", self._soul.model_name))
 

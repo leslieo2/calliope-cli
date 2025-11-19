@@ -19,4 +19,3 @@ class Outline(CallableTool2[Params]):
         heading = params.title if not params.focus else f"{params.title} — {params.focus}"
         output = f"# Outline for {heading}\n\n- [Stub] Add sections here."
         return ToolOk(output=output)
-

@@ -158,7 +158,7 @@ class CalliopeCore:
             "Retrying {name} for the {n} time. Waiting {sleep} seconds.",
             name=name,
             n=retry_state.attempt_number,
-            sleep=retry_state.next_action.sleep
-            if retry_state.next_action is not None
-            else "unknown",
+            sleep=(
+                retry_state.next_action.sleep if retry_state.next_action is not None else "unknown"
+            ),
         )

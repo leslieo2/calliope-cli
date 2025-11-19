@@ -30,7 +30,10 @@ class Session:
         if _history_file is None:
             history_file = work_dir_meta.sessions_dir / f"{session_id}.jsonl"
         else:
-            logger.warning("Using provided history file: {history_file}", history_file=_history_file)
+            logger.warning(
+                "Using provided history file: {history_file}",
+                history_file=_history_file,
+            )
             _history_file.parent.mkdir(parents=True, exist_ok=True)
             if _history_file.exists():
                 assert _history_file.is_file()
@@ -70,4 +73,3 @@ class Session:
             work_dir=work_dir,
             history_file=history_file,
         )
-

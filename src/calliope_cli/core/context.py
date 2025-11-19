@@ -21,7 +21,10 @@ class Context:
         self._next_checkpoint_id: int = 0
 
     async def restore(self) -> bool:
-        logger.debug("Restoring context from file: {file_backend}", file_backend=self._file_backend)
+        logger.debug(
+            "Restoring context from file: {file_backend}",
+            file_backend=self._file_backend,
+        )
         if self._history:
             raise RuntimeError("The context storage is already modified")
         if not self._file_backend.exists():
@@ -120,4 +123,3 @@ class Context:
 
         async with aiofiles.open(self._file_backend, "a", encoding="utf-8") as f:
             await f.write(json.dumps({"role": "_usage", "token_count": token_count}) + "\n")
-

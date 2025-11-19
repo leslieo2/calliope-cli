@@ -8,4 +8,3 @@ def get_share_dir() -> Path:
     share_dir = Path.home() / ".calliope"
     share_dir.mkdir(parents=True, exist_ok=True)
     return share_dir
-

@@ -16,9 +16,13 @@ from rich.table import Table
 
 from calliope_cli.core.calliopecore import CalliopeCore
 from calliope_cli.core.context import Context
-from calliope_cli.utils.message import message_stringify
 from calliope_cli.ui.chat.completers import FileMentionCompleter, MetaCommandCompleter
-from calliope_cli.ui.chat.metacmd import get_meta_command, get_meta_commands, meta_command
+from calliope_cli.ui.chat.metacmd import (
+    get_meta_command,
+    get_meta_commands,
+    meta_command,
+)
+from calliope_cli.utils.message import message_stringify
 
 console = Console()
 
@@ -49,7 +53,9 @@ class ChatApp:
             _render_response(result.message.content)
             return True
 
-        console.print("[italic]Type your message or slash command. Use /help for commands, /exit to quit.[/]")
+        console.print(
+            "[italic]Type your message or slash command. Use /help for commands, /exit to quit.[/]"
+        )
         try:
             while True:
                 try:
@@ -92,7 +98,9 @@ class ChatApp:
             result = await result
         return True if result is None else bool(result)
 
-    async def _call_tool(self, tool_name: str, *, core: CalliopeCore | None = None, **kwargs: Any) -> bool:
+    async def _call_tool(
+        self, tool_name: str, *, core: CalliopeCore | None = None, **kwargs: Any
+    ) -> bool:
         target_core = core or self._soul
         tool = next((t for t in target_core.toolset.tools if t.name == tool_name), None)
         if tool is None:
@@ -194,7 +202,7 @@ async def index(app: ChatApp, args: list[str]):
 async def search(app: ChatApp, args: list[str]):
     """Search indexed content (stub)."""
     if not args:
-        console.print("[red]Usage: /search \"query\" [--top 5][/]")
+        console.print('[red]Usage: /search "query" [--top 5][/]')
         return False
     return await app._call_tool_in_temp_context(
         "RAGSearch",
@@ -207,7 +215,7 @@ async def search(app: ChatApp, args: list[str]):
 async def outline(app: ChatApp, args: list[str]):
     """Generate outline (stub)."""
     if not args:
-        console.print("[red]Usage: /outline \"title\" [--focus audience][/]")
+        console.print('[red]Usage: /outline "title" [--focus audience][/]')
         return False
     focus = _get_str_arg(args, "--focus")
     return await app._call_tool_in_temp_context("Outline", title=" ".join(args), focus=focus)
@@ -217,7 +225,7 @@ async def outline(app: ChatApp, args: list[str]):
 async def summarize(app: ChatApp, args: list[str]):
     """Summarize a section (stub)."""
     if not args:
-        console.print("[red]Usage: /summarize \"section\"[/]")
+        console.print('[red]Usage: /summarize "section"[/]')
         return False
     return await app._call_tool_in_temp_context("Summarize", section=" ".join(args), sources=None)
 
@@ -226,7 +234,7 @@ async def summarize(app: ChatApp, args: list[str]):
 async def rewrite(app: ChatApp, args: list[str]):
     """Rewrite or merge a draft (stub)."""
     if not args:
-        console.print("[red]Usage: /rewrite \"draft\" [--style tone][/]")
+        console.print('[red]Usage: /rewrite "draft" [--style tone][/]')
         return False
     style = _get_str_arg(args, "--style")
     draft = " ".join(a for a in args if not a.startswith("--"))

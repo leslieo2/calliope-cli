@@ -10,6 +10,7 @@ from kosong.tooling import CallableTool2, ToolError, ToolOk, ToolReturnType
 from pydantic import BaseModel, Field
 
 from calliope_cli.core.runtime import BuiltinSystemPromptArgs
+from calliope_cli.tools.utils import load_desc
 
 
 class Params(BaseModel):
@@ -30,10 +31,7 @@ class Params(BaseModel):
 
 class SplitToWorkspace(CallableTool2[Params]):
     name: str = "SplitToWorkspace"
-    description: str = (
-        "Splits a large text file into multiple markdown files based on a regex pattern "
-        "and saves them to a workspace directory using filename/content templates."
-    )
+    description: str = load_desc(Path(__file__).parent / "split_to_workspace.md")
     params: type[Params] = Params
 
     def __init__(self, builtin_args: BuiltinSystemPromptArgs, **kwargs: Any) -> None:
@@ -87,7 +85,7 @@ class SplitToWorkspace(CallableTool2[Params]):
             )
             written += 1
 
-        for idx, (title, body) in enumerate(zip(headings, bodies), start=1):
+        for idx, (title, body) in enumerate(zip(headings, bodies, strict=True), start=1):
             title = title.strip()
             safe_title = self._slugify(title)
             try:

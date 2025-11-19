@@ -6,8 +6,8 @@ agent:
   tools:
     #- calliope_cli.tools.file.read:ReadFile
     - calliope_cli.tools.file.write:WriteFile
-    - calliope_cli.tools.file.sample:ReadSample
-    - calliope_cli.tools.file.split:SplitToWorkspace
+    - calliope_cli.tools.file.read_sample:ReadSample
+    - calliope_cli.tools.file.split_to_workspace:SplitToWorkspace
     #- calliope_cli.tools.outline:Outline
     #- calliope_cli.tools.summarize:Summarize
     #- calliope_cli.tools.rewrite:Rewrite

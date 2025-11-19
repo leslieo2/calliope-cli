@@ -21,4 +21,3 @@ class Rewrite(CallableTool2[Params]):
             header += f" ({params.style})"
         output = f"{header}\n\n[Stub] Refined version of:\n\n{params.draft}"
         return ToolOk(output=output)
-
